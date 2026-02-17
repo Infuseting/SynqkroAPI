@@ -1,10 +1,12 @@
 package fr.synqkro.api.auth.controller;
 
 import fr.synqkro.api.auth.dto.request.LoginRequest;
+import fr.synqkro.api.auth.dto.request.LogoutRequest;
 import fr.synqkro.api.auth.dto.request.RegisterRequest;
 import fr.synqkro.api.auth.dto.response.TokenResponse;
 import fr.synqkro.api.auth.service.AuthService;
 import fr.synqkro.api.common.dto.response.ApiResponse;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -31,5 +33,17 @@ public class AuthController {
     public ResponseEntity<ApiResponse<TokenResponse>> login(@Valid @RequestBody LoginRequest request, HttpServletResponse response) {
         TokenResponse tokenResponse = authService.login(request, response);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(tokenResponse));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<Void>> logout(HttpServletRequest httpRequest, HttpServletResponse response) {
+        authService.logout(httpRequest, response);
+        return ResponseEntity.ok(ApiResponse.success(null));
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<ApiResponse<TokenResponse>> refresh(HttpServletRequest httpRequest, HttpServletResponse response) {
+        TokenResponse tokenResponse = authService.refresh(httpRequest, response);
+        return ResponseEntity.ok(ApiResponse.success(tokenResponse));
     }
 }

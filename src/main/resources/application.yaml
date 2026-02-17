@@ -1,6 +1,11 @@
 spring:
   application:
     name: SynqkroApi
+  mvc:
+    throw-exception-if-no-handler-found: true
+  web:
+    resources:
+      add-mappings: false
   config:
     import: optional:file:.env[.properties]
   cloud:
@@ -16,14 +21,16 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     open-in-view: false
     database-platform: org.hibernate.dialect.PostgreSQLDialect
 
   data:
     redis:
+      url: redis://default:redis_secret@localhost:6379
       host: ${REDIS_HOST}
       port: 6379
+      username: ${REDIS_USER}
       password: ${REDIS_PASSWORD}
       lettuce:
         pool:
@@ -57,6 +64,7 @@ spring:
         timeout: 5m
 
 security:
+  encryption-key: ${ENCRYPTION_KEY}
   jwt:
     secret: ${JWT_SECRET}
     access-token-expiry: 900
@@ -72,3 +80,10 @@ management:
   tracing:
     sampling:
       probability: 0.1
+
+server:
+  error:
+    whitelabel:
+      enabled: false
+snowflake:
+  machine-id: 1

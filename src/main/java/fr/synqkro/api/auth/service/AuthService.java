@@ -6,6 +6,7 @@ import fr.synqkro.api.auth.dto.request.RegisterRequest;
 import fr.synqkro.api.auth.dto.response.DeleteResponse;
 import fr.synqkro.api.auth.dto.response.LogoutResponse;
 import fr.synqkro.api.auth.dto.response.TokenResponse;
+import fr.synqkro.api.auth.dto.response.UserProfileResponse;
 import fr.synqkro.api.common.entity.RefreshTokenEntity;
 import fr.synqkro.api.common.entity.UserEntity;
 import fr.synqkro.api.common.exception.ApiException;
@@ -161,4 +162,41 @@ public class AuthService {
 
         return refreshToken;
     }
+
+    public UserProfileResponse getCurrentUser(HttpServletRequest request) {
+        String authHeader = request.getHeader(org.springframework.http.HttpHeaders.AUTHORIZATION);
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new fr.synqkro.api.common.exception.ApiException("ACCESS_TOKEN_MISSING", org.springframework.http.HttpStatus.UNAUTHORIZED);
+        }
+
+        String token = authHeader.substring(7).trim();
+        if (!jwtTokenProvider.validateToken(token)) {
+            throw new fr.synqkro.api.common.exception.ApiException("ACCESS_TOKEN_INVALID", org.springframework.http.HttpStatus.UNAUTHORIZED);
+        }
+
+        io.jsonwebtoken.Claims claims = jwtTokenProvider.parseToken(token);
+        long userId;
+        try {
+            userId = Long.parseLong(claims.getSubject());
+        } catch (Exception ex) {
+            throw new fr.synqkro.api.common.exception.ApiException("ACCESS_TOKEN_INVALID", org.springframework.http.HttpStatus.UNAUTHORIZED);
+        }
+
+        fr.synqkro.api.common.entity.UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new fr.synqkro.api.common.exception.ApiException("USER_NOT_FOUND", org.springframework.http.HttpStatus.NOT_FOUND));
+
+        if (user.getStatus() != fr.synqkro.api.common.enums.UserStatus.ACTIVE) {
+            throw new fr.synqkro.api.common.exception.ApiException("USER_FORBIDDEN", org.springframework.http.HttpStatus.FORBIDDEN);
+        }
+
+        return new UserProfileResponse(
+                String.valueOf(user.getId()),
+                user.getUsername(),
+                user.getEmail(),
+                user.getAvatarKey(),
+                user.isEmailVerified(),
+                user.getCreatedAt().toString()
+        );
+    }
+
 }

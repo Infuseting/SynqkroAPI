@@ -6,6 +6,7 @@ import fr.synqkro.api.auth.dto.request.RegisterRequest;
 import fr.synqkro.api.auth.dto.response.DeleteResponse;
 import fr.synqkro.api.auth.dto.response.LogoutResponse;
 import fr.synqkro.api.auth.dto.response.TokenResponse;
+import fr.synqkro.api.auth.dto.response.UserProfileResponse;
 import fr.synqkro.api.auth.service.AuthService;
 import fr.synqkro.api.common.dto.response.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,6 +15,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -54,4 +56,11 @@ public class AuthController {
         DeleteResponse deleteResponse = authService.delete(httpRequest, response);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
+
+    @PostMapping("/me")
+    public ResponseEntity<ApiResponse<UserProfileResponse>> me(HttpServletRequest request) {
+        UserProfileResponse profile = authService.getCurrentUser(request);
+        return ResponseEntity.ok(ApiResponse.success(profile));
+    }
+
 }

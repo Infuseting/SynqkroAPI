@@ -1,0 +1,74 @@
+spring:
+  application:
+    name: SynqkroApi
+  config:
+    import: optional:file:.env[.properties]
+  cloud:
+    config:
+      enabled: ${CLOUD_CONFIG_ENABLED}
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: 6379
+      password: ${REDIS_PASSWORD}
+      lettuce:
+        pool:
+          max-active: 16
+    scylladb:
+      contact-points: ${SCYLLADB_HOSTS}
+      local-datacenter: datacenter1
+      keyspace: synqkro_messages
+  kafka:
+    bootstrap-servers: ${KAFKA_BROKERS}
+    consumer:
+      group-id: synqkro-api
+      auto-offset-reset: earliest
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+  mail:
+    host: ${MAIL_HOST}
+    port: 587
+    username: ${MAIL_USER}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+
+  docker:
+    compose:
+      lifecycle-management: start_and_stop
+      readiness:
+        timeout: 5m
+
+security:
+  jwt:
+    secret: ${JWT_SECRET}
+    access-token-expiry: 900
+    refresh-token-expiry: 2592000
+
+management:
+  server:
+    port: 9091
+  endpoints:
+    web:
+      exposure:
+        include: health, prometheus, info, metrics
+  tracing:
+    sampling:
+      probability: 0.1

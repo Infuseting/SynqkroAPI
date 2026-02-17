@@ -3,6 +3,8 @@ package fr.synqkro.api.auth.controller;
 import fr.synqkro.api.auth.dto.request.LoginRequest;
 import fr.synqkro.api.auth.dto.request.LogoutRequest;
 import fr.synqkro.api.auth.dto.request.RegisterRequest;
+import fr.synqkro.api.auth.dto.response.DeleteResponse;
+import fr.synqkro.api.auth.dto.response.LogoutResponse;
 import fr.synqkro.api.auth.dto.response.TokenResponse;
 import fr.synqkro.api.auth.service.AuthService;
 import fr.synqkro.api.common.dto.response.ApiResponse;
@@ -37,7 +39,7 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout(HttpServletRequest httpRequest, HttpServletResponse response) {
-        authService.logout(httpRequest, response);
+        LogoutResponse logoutResponse = authService.logout(httpRequest, response);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 
@@ -45,5 +47,11 @@ public class AuthController {
     public ResponseEntity<ApiResponse<TokenResponse>> refresh(HttpServletRequest httpRequest, HttpServletResponse response) {
         TokenResponse tokenResponse = authService.refresh(httpRequest, response);
         return ResponseEntity.ok(ApiResponse.success(tokenResponse));
+    }
+
+    @PostMapping("/delete")
+    public ResponseEntity<ApiResponse<Void>> deleteAccount(HttpServletRequest httpRequest, HttpServletResponse response) {
+        DeleteResponse deleteResponse = authService.delete(httpRequest, response);
+        return ResponseEntity.ok(ApiResponse.success(null));
     }
 }

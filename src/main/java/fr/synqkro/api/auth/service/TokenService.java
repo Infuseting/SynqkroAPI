@@ -13,6 +13,7 @@ import fr.synqkro.api.common.provider.JwtTokenProvider;
 import fr.synqkro.api.common.repository.RefreshTokenRepository;
 import fr.synqkro.api.common.repository.UserRepository;
 import fr.synqkro.api.common.util.SnowflakeIDGenerator;
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;

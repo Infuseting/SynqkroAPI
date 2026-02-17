@@ -1,12 +1,20 @@
 package fr.synqkro.api.auth.service;
 
+import fr.synqkro.api.auth.dto.internal.TokenValidation;
 import fr.synqkro.api.auth.dto.request.LoginRequest;
 import fr.synqkro.api.auth.dto.request.RegisterRequest;
+import fr.synqkro.api.auth.dto.response.DeleteResponse;
+import fr.synqkro.api.auth.dto.response.LogoutResponse;
 import fr.synqkro.api.auth.dto.response.TokenResponse;
+import fr.synqkro.api.common.entity.RefreshTokenEntity;
 import fr.synqkro.api.common.entity.UserEntity;
 import fr.synqkro.api.common.exception.ApiException;
+import fr.synqkro.api.common.repository.RefreshTokenRepository;
 import fr.synqkro.api.common.repository.UserRepository;
 import fr.synqkro.api.common.util.SnowflakeIDGenerator;
+import fr.synqkro.api.common.util.UserDataGenerator;
+import fr.synqkro.api.common.provider.JwtTokenProvider;
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Cookie;
@@ -31,6 +39,8 @@ public class AuthService {
     private final TokenService tokenService;
     private final PasswordEncoder passwordEncoder;
     private final SnowflakeIDGenerator snowflake;
+    private final RefreshTokenRepository refreshTokenRepository;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Transactional
     public TokenResponse register(RegisterRequest request, HttpServletResponse response) {
@@ -71,12 +81,55 @@ public class AuthService {
         return tokenService.issueTokens(user, response);
     }
 
-    public void logout(HttpServletRequest httpRequest, HttpServletResponse response) {
+    @Transactional
+    public LogoutResponse logout(HttpServletRequest httpRequest, HttpServletResponse response) {
         String refreshToken = getRefreshToken(httpRequest);
 
         if (refreshToken != null && !refreshToken.isBlank()) {
             tokenService.revokeRefreshToken(refreshToken);
         }
+        ResponseCookie deleteCookie = ResponseCookie.from("refreshToken", "")
+                .httpOnly(true)
+                .secure(true)
+                .sameSite("Strict")
+                .path("/auth/refresh")
+                .maxAge(0)
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, deleteCookie.toString());
+
+        return new LogoutResponse();
+    }
+    @Transactional
+    public TokenResponse refresh(HttpServletRequest httpRequest, HttpServletResponse response) {
+        String refreshToken = getRefreshToken(httpRequest);
+
+        if (refreshToken == null || refreshToken.isBlank()) {
+            throw new ApiException("REFRESH_TOKEN_MISSING", HttpStatus.UNAUTHORIZED);
+        }
+
+        return tokenService.rotateRefreshToken(refreshToken, httpRequest, response);
+    }
+    @Transactional
+    public DeleteResponse delete(HttpServletRequest httpRequest, HttpServletResponse response) {
+        String refreshToken = getRefreshToken(httpRequest);
+        if (refreshToken == null || refreshToken.isBlank()) {
+            throw new ApiException("REFRESH_TOKEN_MISSING", HttpStatus.UNAUTHORIZED);
+        }
+
+        TokenValidation validation = tokenService.validateRefreshToken(refreshToken);
+        long userId = validation.userId();
+
+        UserEntity userEntity = userRepository.findById(userId)
+                .orElseThrow(() -> new ApiException("USER_NOT_FOUND", HttpStatus.NOT_FOUND));
+
+        tokenService.revokeAllTokensForUser(userEntity.getId());
+
+        String anonymousUsername = UserDataGenerator.generateRandomUsername();
+        String anonymousEmail = UserDataGenerator.generateRandomEmail();
+        String randomHash = passwordEncoder.encode(UserDataGenerator.generateRandomPassword());
+
+        userRepository.anonymizeUser(userEntity.getId(), anonymousUsername, anonymousEmail, randomHash, Instant.now());
 
         ResponseCookie deleteCookie = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
@@ -87,18 +140,11 @@ public class AuthService {
                 .build();
 
         response.addHeader(HttpHeaders.SET_COOKIE, deleteCookie.toString());
+
+        log.info("User delete: id={}", userEntity.getId());
+
+        return new DeleteResponse();
     }
-
-    public TokenResponse refresh(HttpServletRequest httpRequest, HttpServletResponse response) {
-        String refreshToken = getRefreshToken(httpRequest);
-
-        if (refreshToken == null || refreshToken.isBlank()) {
-            throw new ApiException("REFRESH_TOKEN_MISSING", HttpStatus.UNAUTHORIZED);
-        }
-
-        return tokenService.rotateRefreshToken(refreshToken, httpRequest, response);
-    }
-
 
     public String getRefreshToken(HttpServletRequest httpRequest) {
         String refreshToken = null;

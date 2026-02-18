@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{emails/base :: layout(~{::content})}">
+
+<head>
+    <title>Trusted Device Added</title>
+</head>
+
+<body>
+    <div th:fragment="content">
+        <!-- Icon -->
+        <div style="text-align: center; margin-bottom: 32px;">
+            <div
+                style="display: inline-block; width: 80px; height: 80px; background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); border-radius: 50%;">
+                <span style="font-size: 40px; line-height: 80px;">📱</span>
+            </div>
+        </div>
+
+        <!-- Title -->
+        <h2 style="margin: 0 0 16px; color: #212529; font-size: 24px; font-weight: 700; text-align: center;">
+            Nouvel appareil de confiance ajouté
+        </h2>
+
+        <p style="margin: 0 0 24px; color: #6c757d; font-size: 16px; line-height: 1.6; text-align: center;">
+            Bonjour <strong th:text="${username}">User</strong>,<br>
+            Un nouvel appareil a été marqué comme "de confiance" sur votre compte.
+        </p>
+
+        <!-- Device Box -->
+        <div
+            style="background-color: #d4edda; border-left: 4px solid #28a745; border-radius: 8px; padding: 20px; margin: 24px 0;">
+            <h3 style="margin: 0 0 12px; color: #155724; font-size: 16px; font-weight: 600;">
+                Détails de l'appareil :
+            </h3>
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                    <td style="padding: 6px 0; color: #155724; font-size: 14px; font-weight: 600;">📱 Nom :</td>
+                    <td style="padding: 6px 0; color: #155724; font-size: 14px;" th:text="${deviceName}">Mon MacBook Pro
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 6px 0; color: #155724; font-size: 14px; font-weight: 600;">🕐 Ajouté le :</td>
+                    <td style="padding: 6px 0; color: #155724; font-size: 14px;" th:text="${addedTime}">18/02/2026 à
+                        01:25</td>
+                </tr>
+                <tr>
+                    <td style="padding: 6px 0; color: #155724; font-size: 14px; font-weight: 600;">📍 Localisation :
+                    </td>
+                    <td style="padding: 6px 0; color: #155724; font-size: 14px;" th:text="${location}">Paris, France
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 6px 0; color: #155724; font-size: 14px; font-weight: 600;">🌐 Adresse IP :</td>
+                    <td style="padding: 6px 0; color: #155724; font-size: 14px;" th:text="${ipAddress}">192.168.1.1</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Info -->
+        <div style="background-color: #f8f9fa; border-radius: 12px; padding: 16px; margin: 24px 0;">
+            <p style="margin: 0; color: #495057; font-size: 14px; line-height: 1.5;">
+                ℹ️ Les appareils de confiance ne nécessitent pas de code 2FA lors de la connexion.
+            </p>
+        </div>
+
+        <p style="margin: 24px 0 0; color: #6c757d; font-size: 14px; line-height: 1.5; text-align: center;">
+            Si vous n'êtes pas à l'origine de cette action, révoquez immédiatement cet appareil depuis vos paramètres.
+        </p>
+    </div>
+</body>
+
+</html>

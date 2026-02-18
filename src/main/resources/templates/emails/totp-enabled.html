@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{emails/base :: layout(~{::content})}">
+
+<head>
+    <title>TOTP Enabled</title>
+</head>
+
+<body>
+    <div th:fragment="content">
+        <!-- Icon -->
+        <div style="text-align: center; margin-bottom: 32px;">
+            <div
+                style="display: inline-block; width: 80px; height: 80px; background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); border-radius: 50%;">
+                <span style="font-size: 40px; line-height: 80px;">🔐</span>
+            </div>
+        </div>
+
+        <!-- Title -->
+        <h2 style="margin: 0 0 16px; color: #212529; font-size: 24px; font-weight: 700; text-align: center;">
+            Authentification à deux facteurs activée !
+        </h2>
+
+        <p style="margin: 0 0 24px; color: #6c757d; font-size: 16px; line-height: 1.6; text-align: center;">
+            Bonjour <strong th:text="${username}">User</strong>,<br>
+            Votre compte est maintenant protégé par l'authentification à deux facteurs (2FA).
+        </p>
+
+        <!-- Success Box -->
+        <div
+            style="background-color: #d4edda; border-left: 4px solid #28a745; border-radius: 8px; padding: 20px; margin: 24px 0;">
+            <p style="margin: 0; color: #155724; font-size: 14px; line-height: 1.5; font-weight: 600;">
+                ✅ 2FA activée le <span th:text="${enabledTime}">18/02/2026 à 01:05</span>
+            </p>
+        </div>
+
+        <!-- Info Box -->
+        <div style="background-color: #f8f9fa; border-radius: 12px; padding: 20px; margin: 24px 0;">
+            <h3 style="margin: 0 0 12px; color: #212529; font-size: 16px; font-weight: 600;">
+                Que se passe-t-il ensuite ?
+            </h3>
+            <ul style="margin: 0; padding-left: 20px; color: #495057; font-size: 14px; line-height: 1.8;">
+                <li>Vous devrez saisir un code 2FA à chaque connexion</li>
+                <li>Conservez vos codes de récupération en lieu sûr</li>
+                <li>Vous pouvez désactiver la 2FA à tout moment dans vos paramètres</li>
+            </ul>
+        </div>
+
+        <p style="margin: 24px 0 0; color: #6c757d; font-size: 14px; line-height: 1.5; text-align: center;">
+            Votre compte est maintenant encore plus sécurisé ! 🎉
+        </p>
+    </div>
+</body>
+
+</html>

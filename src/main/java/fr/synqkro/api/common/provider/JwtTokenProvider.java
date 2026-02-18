@@ -1,6 +1,5 @@
 package fr.synqkro.api.common.provider;
 
-
 import fr.synqkro.api.common.entity.UserEntity;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
@@ -20,24 +19,24 @@ import java.util.Date;
 public class JwtTokenProvider {
 
     private final SecretKey key;
-    private final long      accessTokenExpiry;
+    private final long accessTokenExpiry;
 
     public JwtTokenProvider(
-            @Value("${security.jwt.secret}")               String secret,
-            @Value("${security.jwt.access-token-expiry}")  long   accessTokenExpiry
-    ) {
-        this.key               = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+            @Value("${security.jwt.secret}") String secret,
+            @Value("${security.jwt.access-token-expiry}") long accessTokenExpiry) {
+        this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.accessTokenExpiry = accessTokenExpiry;
     }
 
-    public String generateAccessToken(UserEntity user) {
-        Instant now     = Instant.now();
+    public String generateAccessToken(UserEntity user, Long sessionId) {
+        Instant now = Instant.now();
         Instant expires = now.plusSeconds(accessTokenExpiry);
 
         return Jwts.builder()
                 .subject(String.valueOf(user.getId()))
                 .claim("username", user.getUsername())
-                .claim("email",    user.getEmail())
+                .claim("email", user.getEmail())
+                .claim("sid", sessionId)
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(expires))
                 .signWith(key)

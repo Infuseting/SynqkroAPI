@@ -1,6 +1,5 @@
 package fr.synqkro.api.common.entity;
 
-
 import fr.synqkro.api.common.converter.EncryptedStringConverter;
 import fr.synqkro.api.common.enums.UserStatus;
 import jakarta.persistence.*;
@@ -11,13 +10,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(
-        name = "users",
-        indexes = {
-                @Index(name = "idx_users_email",    columnList = "email",    unique = true),
-                @Index(name = "idx_users_username", columnList = "username", unique = true)
-        }
-)
+@Table(name = "users", indexes = {
+        @Index(name = "idx_users_email", columnList = "email", unique = true),
+        @Index(name = "idx_users_username", columnList = "username", unique = true)
+})
 @Getter
 @Setter
 @Builder
@@ -60,6 +56,12 @@ public class UserEntity {
     @Column(name = "pending_email_token_expires_at")
     private Instant pendingEmailTokenExpiresAt;
 
+    @Column(name = "password_reset_token", length = 64)
+    private String passwordResetToken;
+
+    @Column(name = "password_reset_token_expires_at")
+    private Instant passwordResetTokenExpiresAt;
+
     @Convert(converter = EncryptedStringConverter.class)
     @Column(name = "totp_secret", length = 512)
     private String totpSecret;
@@ -73,21 +75,19 @@ public class UserEntity {
     private boolean totpVerified = false;
 
     @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "user_totp_recovery_codes",joinColumns = @JoinColumn(name = "user_id"))
+    @CollectionTable(name = "user_totp_recovery_codes", joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "code_hash", length = 128)
     @Builder.Default
     private List<String> totpRecoveryCodes = new ArrayList<>();
 
-    @Column(name = "password_reset_token", length = 64)
-    private String passwordResetToken;
-
-    @Column(name = "password_reset_token_expires_at")
-    private Instant passwordResetTokenExpiresAt;
-
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 16)
+    @Column(name = "status", nullable = false, length = 20)
     @Builder.Default
     private UserStatus status = UserStatus.ACTIVE;
+
+    @Column(name = "deleted", nullable = false)
+    @Builder.Default
+    private boolean deleted = false;
 
     @Column(name = "deleted_at")
     private Instant deletedAt;
@@ -95,18 +95,32 @@ public class UserEntity {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
-    @Column(name = "updated_at", nullable = false)
+    @Column(name = "updated_at")
     private Instant updatedAt;
 
     @PrePersist
     protected void onCreate() {
-        createdAt = Instant.now();
-        updatedAt = Instant.now();
+        if (createdAt == null) {
+            createdAt = Instant.now();
+        }
+        if (updatedAt == null) {
+            updatedAt = Instant.now();
+        }
     }
 
     @PreUpdate
     protected void onUpdate() {
         updatedAt = Instant.now();
+    }
+
+    // Helper methods pour gérer les recovery codes
+    public void setRecoveryCodes(List<String> codes) {
+        this.totpRecoveryCodes.clear();
+        this.totpRecoveryCodes.addAll(codes);
+    }
+
+    public boolean removeRecoveryCode(String codeHash) {
+        return this.totpRecoveryCodes.remove(codeHash);
     }
 
     public boolean isAnonymized() {

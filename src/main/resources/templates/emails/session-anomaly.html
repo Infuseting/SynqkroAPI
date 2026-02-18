@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{emails/base :: layout(~{::content})}">
+
+<head>
+    <title>Session Anomaly</title>
+</head>
+
+<body>
+    <div th:fragment="content">
+        <!-- Icon -->
+        <div style="text-align: center; margin-bottom: 32px;">
+            <div
+                style="display: inline-block; width: 80px; height: 80px; background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); border-radius: 50%;">
+                <span style="font-size: 40px; line-height: 80px;">⚠️</span>
+            </div>
+        </div>
+
+        <!-- Title -->
+        <h2 style="margin: 0 0 16px; color: #dc3545; font-size: 24px; font-weight: 700; text-align: center;">
+            Activité suspecte détectée
+        </h2>
+
+        <p style="margin: 0 0 24px; color: #6c757d; font-size: 16px; line-height: 1.6; text-align: center;">
+            Bonjour <strong th:text="${username}">User</strong>,<br>
+            Une activité inhabituelle a été détectée sur votre compte.
+        </p>
+
+        <!-- Alert Box -->
+        <div
+            style="background-color: #f8d7da; border-left: 4px solid #dc3545; border-radius: 8px; padding: 20px; margin: 24px 0;">
+            <h3 style="margin: 0 0 12px; color: #721c24; font-size: 16px; font-weight: 600;">
+                Détails de la connexion :
+            </h3>
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                    <td style="padding: 6px 0; color: #721c24; font-size: 14px; font-weight: 600;">📍 Localisation :
+                    </td>
+                    <td style="padding: 6px 0; color: #721c24; font-size: 14px;" th:text="${location}">Paris, France
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 6px 0; color: #721c24; font-size: 14px; font-weight: 600;">🌐 Adresse IP :</td>
+                    <td style="padding: 6px 0; color: #721c24; font-size: 14px;" th:text="${ipAddress}">192.168.1.1</td>
+                </tr>
+                <tr>
+                    <td style="padding: 6px 0; color: #721c24; font-size: 14px; font-weight: 600;">💻 Appareil :</td>
+                    <td style="padding: 6px 0; color: #721c24; font-size: 14px;" th:text="${userAgent}">Chrome on
+                        Windows</td>
+                </tr>
+                <tr>
+                    <td style="padding: 6px 0; color: #721c24; font-size: 14px; font-weight: 600;">⚡ Score de risque :
+                    </td>
+                    <td style="padding: 6px 0; color: #721c24; font-size: 14px;">
+                        <span th:text="${riskScore}">75</span>/100
+                        <span
+                            style="background-color: #dc3545; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-left: 8px;">ÉLEVÉ</span>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- CTA Button -->
+        <div style="text-align: center; margin: 32px 0;">
+            <a th:href="${sessionUrl}"
+                style="display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: #212529; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 12px rgba(250, 112, 154, 0.4);">
+                Gérer mes sessions
+            </a>
+        </div>
+
+        <p style="margin: 24px 0 0; color: #6c757d; font-size: 14px; line-height: 1.5; text-align: center;">
+            Si c'était vous, vous pouvez ignorer cet email.<br>
+            Sinon, nous vous recommandons de <strong>révoquer immédiatement toutes les sessions</strong> et de changer
+            votre mot de passe.
+        </p>
+    </div>
+</body>
+
+</html>

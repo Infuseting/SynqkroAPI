@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{emails/base :: layout(~{::content})}">
+
+<head>
+    <title>Email Confirmation</title>
+</head>
+
+<body>
+    <div th:fragment="content">
+        <!-- Icon -->
+        <div style="text-align: center; margin-bottom: 32px;">
+            <div
+                style="display: inline-block; width: 80px; height: 80px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%;">
+                <span style="font-size: 40px; line-height: 80px;">✉️</span>
+            </div>
+        </div>
+
+        <!-- Title -->
+        <h2 style="margin: 0 0 16px; color: #212529; font-size: 24px; font-weight: 700; text-align: center;">
+            Confirmez votre adresse email
+        </h2>
+
+        <p style="margin: 0 0 24px; color: #6c757d; font-size: 16px; line-height: 1.6; text-align: center;">
+            Bonjour <strong th:text="${username}">User</strong>,<br>
+            Cliquez sur le bouton ci-dessous pour confirmer votre adresse email.
+        </p>
+
+        <!-- CTA Button -->
+        <div style="text-align: center; margin: 32px 0;">
+            <a th:href="${confirmationUrl}"
+                style="display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);">
+                Confirmer mon email
+            </a>
+        </div>
+
+        <!-- Alternative Link -->
+        <p style="margin: 24px 0 0; color: #adb5bd; font-size: 13px; line-height: 1.5; text-align: center;">
+            Ou copiez ce lien dans votre navigateur :<br>
+            <a th:href="${confirmationUrl}" th:text="${confirmationUrl}"
+                style="color: #667eea; word-break: break-all;">confirmation link</a>
+        </p>
+
+        <p style="margin: 16px 0 0; color: #adb5bd; font-size: 13px; line-height: 1.5; text-align: center;">
+            Ce lien expire dans 48 heures.
+        </p>
+    </div>
+</body>
+
+</html>

@@ -51,7 +51,6 @@ public class TokenService {
     @Value("${security.jwt.refresh-token-expiry}")
     private long refreshTokenExpirySeconds;
 
-
     private String keyHash(String hashedToken) {
         return "rt:hash:" + hashedToken;
     }
@@ -60,10 +59,20 @@ public class TokenService {
         return "rt:user:" + userId;
     }
 
-
     public TokenResponse issueTokens(UserEntity user, HttpServletResponse response) {
-        String accessToken  = jwtTokenProvider.generateAccessToken(user);
-        String rawToken     = generateOpaqueToken();
+        return issueTokens(user, null, response);
+    }
+
+    /**
+     * Émet une paire access/refresh token en incluant le sessionId dans le JWT.
+     *
+     * @param user      l'utilisateur authentifié
+     * @param sessionId l'ID de la session courante (encodé comme claim {@code sid})
+     * @param response  la réponse HTTP pour y déposer le cookie refreshToken
+     */
+    public TokenResponse issueTokens(UserEntity user, Long sessionId, HttpServletResponse response) {
+        String accessToken = jwtTokenProvider.generateAccessToken(user, sessionId);
+        String rawToken = generateOpaqueToken();
 
         persistRefreshToken(user, rawToken);
         injectRefreshTokenCookie(response, rawToken);
@@ -71,10 +80,8 @@ public class TokenService {
         return new TokenResponse(
                 accessToken,
                 "Bearer",
-                jwtTokenProvider.getAccessTokenExpiry()
-        );
+                jwtTokenProvider.getAccessTokenExpiry());
     }
-
 
     private void persistRefreshToken(UserEntity user, String rawToken) {
         String hashedToken = hashToken(rawToken);
@@ -107,38 +114,31 @@ public class TokenService {
 
     @Transactional
     public TokenResponse rotateRefreshToken(String rawToken,
-                                            HttpServletRequest request,
-                                            HttpServletResponse response) {
+            HttpServletRequest request,
+            HttpServletResponse response) {
         String hashedToken = hashToken(rawToken);
 
-
         String entry = Optional.ofNullable(
-                redisTemplate.opsForValue().get(keyHash(hashedToken))
-        ).orElseThrow(() ->
-                new ApiException("REFRESH_TOKEN_INVALID", HttpStatus.UNAUTHORIZED)
-        );
+                redisTemplate.opsForValue().get(keyHash(hashedToken)))
+                .orElseThrow(() -> new ApiException("REFRESH_TOKEN_INVALID", HttpStatus.UNAUTHORIZED));
 
-        long userId  = Long.parseLong(entry.split(":")[0]);
+        long userId = Long.parseLong(entry.split(":")[0]);
         long tokenId = Long.parseLong(entry.split(":")[1]);
-
 
         RefreshTokenEntity stored = refreshTokenRepository
                 .findById(tokenId)
-                .orElseThrow(() ->
-                        new ApiException("REFRESH_TOKEN_INVALID", HttpStatus.UNAUTHORIZED)
-                );
+                .orElseThrow(() -> new ApiException("REFRESH_TOKEN_INVALID", HttpStatus.UNAUTHORIZED));
 
         checkSessionCoherence(stored, request, userId);
 
-
         revokeOne(hashedToken, userId, tokenId);
 
-        UserEntity user = userRepository.findById(userId).orElseThrow(() ->
-            new ApiException("USER_NOT_FOUND", HttpStatus.UNAUTHORIZED)
-        );
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new ApiException("USER_NOT_FOUND", HttpStatus.UNAUTHORIZED));
 
         return issueTokens(user, response);
     }
+
     public TokenValidation validateRefreshToken(String rawToken) {
         String hashedToken = hashToken(rawToken);
         String entry = redisTemplate.opsForValue().get(keyHash(hashedToken));
@@ -147,9 +147,9 @@ public class TokenService {
             throw new ApiException("REFRESH_TOKEN_INVALID", HttpStatus.UNAUTHORIZED);
         }
 
-        String[] parts  = entry.split(":");
-        long userId     = Long.parseLong(parts[0]);
-        long tokenId    = Long.parseLong(parts[1]);
+        String[] parts = entry.split(":");
+        long userId = Long.parseLong(parts[0]);
+        long tokenId = Long.parseLong(parts[1]);
 
         return new TokenValidation(userId, tokenId, hashedToken);
     }
@@ -158,9 +158,10 @@ public class TokenService {
         String hashedToken = hashToken(rawToken);
 
         String entry = redisTemplate.opsForValue().get(keyHash(hashedToken));
-        if (entry == null) return;
+        if (entry == null)
+            return;
 
-        long userId  = Long.parseLong(entry.split(":")[0]);
+        long userId = Long.parseLong(entry.split(":")[0]);
         long tokenId = Long.parseLong(entry.split(":")[1]);
 
         revokeOne(hashedToken, userId, tokenId);
@@ -172,21 +173,19 @@ public class TokenService {
             String member = hashedToken + ":" + tokenId;
             connection.setCommands().sRem(
                     keyUserSet(userId).getBytes(),
-                    member.getBytes()
-            );
+                    member.getBytes());
             return null;
         });
         eventProducer.publish("token.revoked", new TokenRevokedEvent(tokenId, Instant.now()));
     }
-
-
 
     public void revokeAllTokensForUser(long userId) {
         String userSetKey = keyUserSet(userId);
 
         Set<String> members = redisTemplate.opsForSet().members(userSetKey);
 
-        if (members == null || members.isEmpty()) return;
+        if (members == null || members.isEmpty())
+            return;
 
         redisTemplate.executePipelined((RedisCallback<?>) connection -> {
             for (String member : members) {
@@ -207,8 +206,8 @@ public class TokenService {
     }
 
     private void checkSessionCoherence(RefreshTokenEntity stored,
-                                       HttpServletRequest request,
-                                       long userId) {
+            HttpServletRequest request,
+            long userId) {
         String incoming = buildFingerprint(request);
         String stored_fp = stored.getFingerprint();
 
@@ -228,17 +227,16 @@ public class TokenService {
                     stored.getIp(),
                     extractIp(request),
                     stored.getUserAgent(),
-                    request.getHeader("User-Agent")
-            ));
+                    request.getHeader("User-Agent")));
 
             throw new ApiException("SESSION_ANOMALY_DETECTED", HttpStatus.UNAUTHORIZED);
         }
     }
 
     private String buildFingerprint(HttpServletRequest request) {
-        String subnet    = toSubnet(extractIp(request));
+        String subnet = toSubnet(extractIp(request));
         String userAgent = request.getHeader("User-Agent");
-        String locale    = request.getHeader("Accept-Language");
+        String locale = request.getHeader("Accept-Language");
         return DigestUtils.sha256Hex(subnet + "|" + userAgent + "|" + locale);
     }
 
@@ -255,7 +253,6 @@ public class TokenService {
         return request.getRemoteAddr();
     }
 
-
     private String generateOpaqueToken() {
         byte[] bytes = new byte[64];
         new SecureRandom().nextBytes(bytes);
@@ -265,7 +262,6 @@ public class TokenService {
     private String hashToken(String rawToken) {
         return DigestUtils.sha256Hex(rawToken);
     }
-
 
     private void injectRefreshTokenCookie(HttpServletResponse response, String rawToken) {
         ResponseCookie cookie = ResponseCookie.from("refreshToken", rawToken)

@@ -69,6 +69,48 @@ security:
     secret: ${JWT_SECRET}
     access-token-expiry: 900
     refresh-token-expiry: 2592000
+  
+  # Rate limiting par route (requêtes/minute)
+  rate-limit:
+    enabled: true
+    routes:
+      auth-login: 5           # POST /auth/login - 5 req/min
+      auth-register: 3        # POST /auth/register - 3 req/min
+      auth-refresh: 10        # POST /auth/refresh - 10 req/min
+      auth-password-forgot: 3 # POST /auth/password/forgot - 3 req/min
+      auth-password-reset: 5  # POST /auth/password/reset - 5 req/min
+      auth-totp-validate: 10  # POST /auth/totp/validate - 10 req/min
+      auth-email-change: 5    # POST /auth/email/change - 5 req/min
+      default: 60             # Défaut pour autres routes - 60 req/min
+  
+  # Headers de sécurité
+  headers:
+    cors:
+      enabled: true
+      allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173}
+      allowed-methods: GET,POST,PUT,DELETE,PATCH,OPTIONS
+      allowed-headers: "*"
+      exposed-headers: Authorization,Content-Type
+      allow-credentials: true
+      max-age: 3600
+    
+    # Content Security Policy
+    csp:
+      enabled: true
+      policy: "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'"
+    
+    # HTTP Strict Transport Security
+    hsts:
+      enabled: true
+      max-age: 31536000
+      include-subdomains: true
+      preload: true
+    
+    # Autres headers de sécurité
+    x-frame-options: DENY
+    x-content-type-options: nosniff
+    x-xss-protection: "1; mode=block"
+    referrer-policy: "no-referrer-when-downgrade"
 
 management:
   server:
